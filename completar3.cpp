@@ -1,42 +1,61 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <readline/readline.h>
+#include <readline/history.h>
 #include <iostream>
+#include <string.h>
+#include <bits/stdc++.h>
 #include <unistd.h>
 #include <fcntl.h>
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <cstddef>
-#include <string.h>
 
-#define n 100
+#pragma GCC diagnostic ignored "-Wwrite-strings"
 #define simbolo_sistema "mi_sh>"
+//g++ [archivo cpp] -o [ejecutable] -lreadline
+static char** my_completion(const char*, int ,int);
+char* my_generator(const char*,int);
+char * dupstr (char*);
+void *xmalloc (int);
+#define n 100
 #define MSJ_ERROR "Error de sintaxis\n"
 
 void comando(char cadena[n], int bg);
 void Nuevo_Proceso(char* comando_[n], int bg);
 void executeCommand(char[]);
 
-
+char* cmd [] ={ "ls", "wc","cat","ps", "exit", "touch","rm","man"," ","\r"};
 
 using namespace std;
-int main()
-{ 
-char cadena[n];  
-int i,bg=0;
-int pid, status;
-int Stdout = dup(1), Stdin = dup(0);
-bool isNotPipe = true;
 
-while(1) // Bucle infinito
+int main()
+{
+    char *buf;
+	string s="";
+    rl_attempted_completion_function = my_completion;
+    int i,bg=0;
+    int pid, status;
+    int Stdout = dup(1), Stdin = dup(0);
+    bool isNotPipe = true;
+    while((buf = readline(simbolo_sistema))!=NULL) 
 	{
-        close(1); 
-        dup(Stdout);
+	close(1); 
+     dup(Stdout);
 		isNotPipe = true;
         close(0); 
-		dup(Stdin); // Asigno la salida estandar, es decir, la consola.
-		
-		printf(simbolo_sistema); //Visualizar en pantalla
-		scanf("\n%[^\n]",cadena); //recorrido de la cadena hasta encontrar INTRO (ENTER)
+		dup(Stdin);   
+		int n_ = s.length();
+		char cadena[n_+1];
+        rl_bind_key('\t',rl_complete);
+ 		s=buf;
+		strcpy(cadena, s.c_str());
+	
+	if (strcmp(buf,"exit")==0)
+           break;
+        if (buf[0]!=0)
+            add_history(buf);
+	
 		bg=0; //background en cero
 		for(i=0;cadena[i] != '\0'; i++)
 		{
@@ -47,7 +66,9 @@ while(1) // Bucle infinito
 				isNotPipe = true;
 	
 			} 
-			if(cadena[i] == '|'){
+			
+			if(cadena[i] == '|')
+			{
 				isNotPipe = false;
 				if(pid = fork() == 0){
 					int pid;
@@ -56,9 +77,10 @@ while(1) // Bucle infinito
 
 					command1 = strtok(cadena, "|");
 					command2 = strtok(NULL, "|");
+
+					cout<<"COMANDO UNO "<<command1<<endl;
+					cout<<"COMANDO DOS"<<command2<<endl;
 					pipe(pipefds);
-
-
 					if ((pid = fork()) < 0) {
 						cerr << "Fork error al ejecutar el comando pipe" << endl;
 						exit(1);
@@ -76,7 +98,7 @@ while(1) // Bucle infinito
 
 					else { //preceso padre
 						close(0);			//cierra la lectura
-						dup(pipefds[0]);	
+						dup(pipefds[0]);	//replace with read side of pipe
 
 						close(pipefds[0]);	
 						close(pipefds[1]);
@@ -92,10 +114,14 @@ while(1) // Bucle infinito
 		}
 		if(isNotPipe==true){
 			comando(cadena,bg); //enviamos la cadena y el estado del background al procedimiento "comando"
-		}
-	}
-return(0);
-} 
+			
+		} 
+	
+    }
+ 	free(buf);
+    return 0;
+}
+ 
 
 void comando(char cadena[n], int bg)
 { 
@@ -158,3 +184,70 @@ void executeCommand(char command[]) {
 	execvp(args[0], args);
 }
 
+ 
+static char** my_completion( const char * text , int start,  int end)
+{
+    char **matches;
+ 
+    matches = (char **)NULL;
+ 
+    if (start == 0)
+        matches = rl_completion_matches ((char*)text, &my_generator);
+    else
+        rl_bind_key('\t',rl_abort);
+	
+ 
+    return (matches);
+ 
+}
+ 
+char* my_generator(const char* text, int state)
+{
+    static int list_index, len;
+    char *name;
+ 
+    if (!state) {
+        list_index = 0;
+        len = strlen (text);
+    }
+   
+    while (name = cmd[list_index]){   //&&strncmp(cmd[list_index],"\r",1)!=0) {
+        list_index++;
+ 
+        if (strncmp (name, text, len) == 0)
+            return (dupstr(name));
+    }
+ 
+    /* If no names matched, then return NULL. */
+    return ((char *)NULL);
+ 
+}
+ 
+char * dupstr (char* s) {
+  char *r;
+ 
+  r = (char*) xmalloc ((strlen (s) + 1));
+  strcpy (r, s);
+  return (r);
+}
+ 
+void * xmalloc (int size)
+{
+    void *buf;
+ 
+    buf = malloc (size);
+    if (!buf) {
+        fprintf (stderr, "Error: Out of memory. Exiting.'n");
+        exit (1);
+    }
+ 
+    return buf;
+}
+
+
+
+
+//char* cmd [] ={ "hello","unitec", "world", "hell" ,"word", "ls", "wc","cat","quit", "marel", "mar"," ","\r" };
+/*char* cmd [] ={ "ls", "wc","ls -l", "ls -a","wc -l","cat","ps", "exit", "touch","mkdir","mkdir -p",
+			   "rm -fr ","rm","man","marel", "mar"," ","\r" };*/
+//char* cmd [] ={ "ls", "wc","cat","ps", "exit", "touch","mkdir","rm","man","marel", "mar"," ","\r" };
