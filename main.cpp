@@ -1,12 +1,15 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <readline/readline.h>
+#include <readline/history.h>
 #include <iostream>
+#include <string.h>
+#include <bits/stdc++.h>
 #include <unistd.h>
 #include <fcntl.h>
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <cstddef>
-#include <string.h>
 
 #pragma GCC diagnostic ignored "-Wwrite-strings"
 #define simbolo_sistema "mi_sh>"
@@ -32,30 +35,30 @@ int main()
   char *subcom;
   FILE *fd,*fd1;
 
-char *buf;
-string s="";
-rl_attempted_completion_function = my_completion;
-int i,bg=0;
-int pid, status;
-int Stdout = dup(1), Stdin = dup(0);
-bool isNotPipe = true;
-while((buf = readline(simbolo_sistema))!=NULL)
-{
-close(1);
- dup(Stdout);
-isNotPipe = true;
+  char *buf;
+  string s="";
+  rl_attempted_completion_function = my_completion;
+  int i,bg=0;
+  int pid, status;
+  int Stdout = dup(1), Stdin = dup(0);
+  bool isNotPipe = true;
+  while((buf = readline(simbolo_sistema))!=NULL)
+  {
+    close(1);
+    dup(Stdout);
+    isNotPipe = true;
     close(0);
-dup(Stdin);
-int n_ = s.length();
-char cadena[n_+1];
+    dup(Stdin);
+    int n_ = s.length();
+    char cadena[n_+1];
     rl_bind_key('\t',rl_complete);
-s=buf;
-strcpy(cadena, s.c_str());
+    s=buf;
+    strcpy(cadena, s.c_str());
 
-if (strcmp(buf,"exit")==0)
-       break;
+    if (strcmp(buf,"exit")==0)
+    break;
     if (buf[0]!=0)
-        add_history(buf);
+    add_history(buf);
 
     close(1);
     dup(Stdout);
@@ -69,7 +72,7 @@ if (strcmp(buf,"exit")==0)
 
     string delimitator =" -";
     string cad = cadena;
-		size_t found = cad.find(delimitator,0);
+    size_t found = cad.find(delimitator,0);
 
     for(i=0;cadena[i] != '\0'; i++)
     {
@@ -121,13 +124,13 @@ if (strcmp(buf,"exit")==0)
           pid=wait(&estado);
         }
       }else if( (cadchar cadena[n];
-  int i,bg=0;
-  int pid, status;
-  int Stdout = dup(1), Stdin = dup(0);
-  bool isNotPipe = true;
+        int i,bg=0;
+        int pid, status;
+        int Stdout = dup(1), Stdin = dup(0);
+        bool isNotPipe = true;
 
-  while(1) // Bucle infinito
-  {ena[i]=='>' && cadena[i+1]=='>') && found != 2){
+        while(1) // Bucle infinito
+        {ena[i]=='>' && cadena[i+1]=='>') && found != 2){
           comand = strtok(cadena," ");
           oper = strtok(NULL," ");
           param = strtok(NULL," ");
@@ -143,165 +146,165 @@ if (strcmp(buf,"exit")==0)
           cout << "4" << endl;
           fclose(fd);
           cout << "5" << endl;
-      }else if( (cadena[i]=='>' && cadena[i+1]=='>') && found == 2){
-        comand = strtok(cadena," ");
-        subcom = strtok(NULL," ");
-        oper = strtok(NULL," ");
-        param = strtok(NULL," ");
+        }else if( (cadena[i]=='>' && cadena[i+1]=='>') && found == 2){
+          comand = strtok(cadena," ");
+          subcom = strtok(NULL," ");
+          oper = strtok(NULL," ");
+          param = strtok(NULL," ");
 
-        fd = fopen(param,"a");
-				int fw = open(param, O_APPEND|O_WRONLY);
-				dup2(fw,1);
-				execlp(comand, comand, subcom, NULL);
-				close(fw);
-				fclose(fd);
-      }else if ( cadena[i]== '>' && found == 2){
-        comand = strtok(cadena," ");
-        subcom = strtok(NULL," ");
-        oper = strtok(NULL," ");
-        param = strtok(NULL," ");
+          fd = fopen(param,"a");
+          int fw = open(param, O_APPEND|O_WRONLY);
+          dup2(fw,1);
+          execlp(comand, comand, subcom, NULL);
+          close(fw);
+          fclose(fd);
+        }else if ( cadena[i]== '>' && found == 2){
+          comand = strtok(cadena," ");
+          subcom = strtok(NULL," ");
+          oper = strtok(NULL," ");
+          param = strtok(NULL," ");
 
-        fd = fopen(param,"w");
-				int fw = open(param, O_APPEND|O_WRONLY);
-				dup2(fw,1);
-				execlp(comand, comand, subcom, NULL);
-				close(fw);
-				fclose(fd);
-      }else if (cadena[i]== '>' && found != 2){
-        comand = strtok(cadena," ");
-  			oper = strtok(NULL," ");
-  			param = strtok(NULL," ");
+          fd = fopen(param,"w");
+          int fw = open(param, O_APPEND|O_WRONLY);
+          dup2(fw,1);
+          execlp(comand, comand, subcom, NULL);
+          close(fw);
+          fclose(fd);
+        }else if (cadena[i]== '>' && found != 2){
+          comand = strtok(cadena," ");
+          oper = strtok(NULL," ");
+          param = strtok(NULL," ");
 
-        fd = fopen(param,"w");
-				int fw = open(param, O_APPEND|O_WRONLY);
-				dup2(fw,1);
-				execlp(comand, comand, NULL);
-				close(fw);
-				fclose(fd);
+          fd = fopen(param,"w");
+          int fw = open(param, O_APPEND|O_WRONLY);
+          dup2(fw,1);
+          execlp(comand, comand, NULL);
+          close(fw);
+          fclose(fd);
+        }
+      }
+      if(isNotPipe==true){
+        comando(cadena,bg); //enviamos la cadena y el estado del background al procedimiento "comando"
       }
     }
-    if(isNotPipe==true){
-      comando(cadena,bg); //enviamos la cadena y el estado del background al procedimiento "comando"
-    }
+    delet buf;
+    return(0);
   }
-  delet buf;
-  return(0);
-}
 
-void comando(char cadena[n], int bg)
-{
-  int i,j,k;
-  char comando[n][n];
-  char *comando_[n];
-  comando_[0] = NULL;
-
-  k = 0;
-  i = 0;
-  while(cadena[i] != '\0')
+  void comando(char cadena[n], int bg)
   {
-    for(j=0; cadena[i] != ' ' && cadena[i] != '\0' ;j++)
+    int i,j,k;
+    char comando[n][n];
+    char *comando_[n];
+    comando_[0] = NULL;
+
+    k = 0;
+    i = 0;
+    while(cadena[i] != '\0')
     {
-      comando[k][j] = cadena[i];// mientras el caracter sea distinto de espacio y terminacion de cadena (\0) añadir al comando el caracter
+      for(j=0; cadena[i] != ' ' && cadena[i] != '\0' ;j++)
+      {
+        comando[k][j] = cadena[i];// mientras el caracter sea distinto de espacio y terminacion de cadena (\0) añadir al comando el caracter
+        i++;
+      }
+      if (cadena[i] == ' ') // Si el caracter es un espacio, pasar al siguiente caracter e introducir un fin de caracter a cada comando leido
       i++;
+      comando[k][j] = '\0';
+      comando_[k] = comando[k];
+      k++;
     }
-    if (cadena[i] == ' ') // Si el caracter es un espacio, pasar al siguiente caracter e introducir un fin de caracter a cada comando leido
-    i++;
-    comando[k][j] = '\0';
-    comando_[k] = comando[k];
-    k++;
+    comando_[k] = NULL;
+    Nuevo_Proceso(comando_,bg);
   }
-  comando_[k] = NULL;
-  Nuevo_Proceso(comando_,bg);
-}
 
-void Nuevo_Proceso(char* comando_[n],int bg)
-{
-  int estado=0;
-  pid_t pid;
-  pid=fork();
-  if (pid<0)
-  printf("ERROR AL CREAR PROCESO");
-  else if (pid==0) {
+  void Nuevo_Proceso(char* comando_[n],int bg)
+  {
+    int estado=0;
+    pid_t pid;
+    pid=fork();
+    if (pid<0)
+    printf("ERROR AL CREAR PROCESO");
+    else if (pid==0) {
 
-    execvp(comando_[0],comando_);
-    perror("ERROR:");
-    exit(estado);
-  }else{
-    if (bg == 0)
-    pid=wait(&estado);
+      execvp(comando_[0],comando_);
+      perror("ERROR:");
+      exit(estado);
+    }else{
+      if (bg == 0)
+      pid=wait(&estado);
+    }
   }
-}
 
-void executeCommand(char command[]) {
-  int index = 1;
-  char *args[30];
-  char *token = strtok(command, " ");
-  args[0] = strdup(token);
+  void executeCommand(char command[]) {
+    int index = 1;
+    char *args[30];
+    char *token = strtok(command, " ");
+    args[0] = strdup(token);
 
-  while ((token = strtok(NULL, " ")) != NULL) {
-    args[index] = strdup(token);
-    ++index;
+    while ((token = strtok(NULL, " ")) != NULL) {
+      args[index] = strdup(token);
+      ++index;
+    }
+    args[index] = NULL;
+    execvp(args[0], args);
   }
-  args[index] = NULL;
-  execvp(args[0], args);
-}
 
 
-static char** my_completion( const char * text , int start,  int end)
-{
+  static char** my_completion( const char * text , int start,  int end)
+  {
     char **matches;
 
     matches = (char **)NULL;
 
     if (start == 0)
-        matches = rl_completion_matches ((char*)text, &my_generator);
+    matches = rl_completion_matches ((char*)text, &my_generator);
     else
-        rl_bind_key('\t',rl_abort);
+    rl_bind_key('\t',rl_abort);
 
 
     return (matches);
 
-}
+  }
 
-char* my_generator(const char* text, int state)
-{
+  char* my_generator(const char* text, int state)
+  {
     static int list_index, len;
     char *name;
 
     if (!state) {
-        list_index = 0;
-        len = strlen (text);
+      list_index = 0;
+      len = strlen (text);
     }
 
     while (name = cmd[list_index]){   //&&strncmp(cmd[list_index],"\r",1)!=0) {
-        list_index++;
+      list_index++;
 
-        if (strncmp (name, text, len) == 0)
-            return (dupstr(name));
+      if (strncmp (name, text, len) == 0)
+      return (dupstr(name));
     }
 
     /* If no names matched, then return NULL. */
     return ((char *)NULL);
 
-}
+  }
 
-char * dupstr (char* s) {
-  char *r;
+  char * dupstr (char* s) {
+    char *r;
 
-  r = (char*) xmalloc ((strlen (s) + 1));
-  strcpy (r, s);
-  return (r);
-}
+    r = (char*) xmalloc ((strlen (s) + 1));
+    strcpy (r, s);
+    return (r);
+  }
 
-void * xmalloc (int size)
-{
+  void * xmalloc (int size)
+  {
     void *buf;
 
     buf = malloc (size);
     if (!buf) {
-        fprintf (stderr, "Error: Out of memory. Exiting.'n");
-        exit (1);
+      fprintf (stderr, "Error: Out of memory. Exiting.'n");
+      exit (1);
     }
 
     return buf;
-}
+  }
