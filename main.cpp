@@ -1,142 +1,215 @@
-#include <unistd.h>
-#include <iostream>
-#include <sys/wait.h>
-#include <stdlib.h>
 #include <stdio.h>
-#include <string.h>
+#include <stdlib.h>
+#include <iostream>
+#include <unistd.h>
 #include <fcntl.h>
+#include <sys/types.h>
+#include <sys/wait.h>
 #include <cstddef>
+#include <string.h>
 
+#define n 100
+#define simbolo_sistema "mi_sh>"
+#define MSJ_ERROR "Error de sintaxis\n"
+
+void comando(char cadena[n], int bg);
+void Nuevo_Proceso(char* comando_[n], int bg);
+void executeCommand(char[]);
 
 using namespace std;
+int main()
+{
+  char *comand;
+  char *param;
+  char *oper;
+  char *subcom;
+  FILE *fd,*fd1;
 
-int main() {
-	int status;
-	char linea[20];
-	char texto[100];
-	char *comando;
-	char *param;
-	char *oper;
-	char *subcom;
-	char *comando1;
-	int pid;
-	FILE *fd,*fd1;
-	char c;
-	int valor;
+  char cadena[n];
+  int i,bg=0;
+  int pid, status;
+  int Stdout = dup(1), Stdin = dup(0);
+  bool isNotPipe = true;
 
-	while (1) {
-		comando = NULL;
-		param = NULL;
-		cout << ":>>";
-		cin.getline(linea, 20);
+  while(1) // Bucle infinito
+  {
+    close(1);
+    dup(Stdout);
+    isNotPipe = true;
+    close(0);
+    dup(Stdin); // Asigno la salida estandar, es decir, la consola.
 
-		string com = linea;
-		string delimitator =" -";
-		string delimitator1 = "&";
-		size_t found = com.rfind(delimitator);
-		size_t found1 = com.rfind(delimitator1);
+    printf(simbolo_sistema); //Visualizar en pantalla
+    scanf("\n%[^\n]",cadena); //recorrido de la cadena hasta encontrar INTRO (ENTER)
+    bg=0; //background en cero
 
-		if(found == 2 && found1 != 2){
-			comando = strtok(linea," ");
-			subcom = strtok(NULL," ");
-			oper = strtok(NULL," ");
-			param = strtok(NULL," ");
+    string delimitator =" -";
+    string cad = cadena;
+		size_t found = cad.find(delimitator,0);
 
-			//si el archivo no existe entonces lo crea y escribe, si ya existe solo sobree escribe en el
-			if( strcmp(oper,">") == 0){
-				fd = fopen(param,"w");
+    for(i=0;cadena[i] != '\0'; i++)
+    {
+      if(cadena[i] == '&') //Se revisa la cadena para ver si hay o no un simbolo '&'
+      {
+        cadena[i] = '\0'; //al encontrar un '&' se asigna un fin de cadena (\0) y se activa el background
+        bg = 1;//el background se activa, 1= activado y 0= desactivado
+        isNotPipe = true;
+      }
+      if(cadena[i] == '|'){
+        isNotPipe = false;
+        if(pid = fork() == 0){
+          int pid;
+          int pipefds[2];
+          char *command1, *command2;
+
+          command1 = strtok(cadena, "|");
+          command2 = strtok(NULL, "|");
+
+          cout<<"COMANDO UNO "<<command1<<endl;
+          cout<<"COMANDO DOS"<<command2<<endl;
+          pipe(pipefds);
+
+          if ((pid = fork()) < 0) {
+            cerr << "Fork error al ejecutar el comando pipe" << endl;
+            exit(1);
+          }
+
+          if (pid == 0) {	//proceso hijo
+            close(1);			//cierra la escritura
+            dup(pipefds[1]);
+
+            close(pipefds[0]);
+            close(pipefds[1]);
+
+            executeCommand(command1);
+          }else { //preceso padre
+            close(0);			//cierra la lectura
+            dup(pipefds[0]);	//replace with read side of pipe
+
+            close(pipefds[0]);
+            close(pipefds[1]);
+
+            executeCommand(command2);
+          }
+        }else{
+          int estado=0;
+          if (bg == 0)
+          pid=wait(&estado);
+        }
+      }else if( (cadena[i]=='>' && cadena[i+1]=='>') && found != 2){
+          comand = strtok(cadena," ");
+          oper = strtok(NULL," ");
+          param = strtok(NULL," ");
+
+          fd = fopen(param,"a");
+          int fw = open(param, O_APPEND|O_WRONLY);
+          cout << "1" << endl;
+          dup2(fw,1);
+          cout << "2" << endl;
+          execlp(comand, comand, NULL);
+          cout << "3" << endl;
+          close(fw);
+          cout << "4" << endl;
+          fclose(fd);
+          cout << "5" << endl;
+      }else if( (cadena[i]=='>' && cadena[i+1]=='>') && found == 2){
+        comand = strtok(cadena," ");
+        subcom = strtok(NULL," ");
+        oper = strtok(NULL," ");
+        param = strtok(NULL," ");
+
+        fd = fopen(param,"a");
 				int fw = open(param, O_APPEND|O_WRONLY);
 				dup2(fw,1);
-				execlp(comando, comando, subcom, NULL);
+				execlp(comand, comand, subcom, NULL);
 				close(fw);
 				fclose(fd);
-			}else if (strcmp(oper,">>") == 0){ //si el archivo no existe lo crea y escribe, si ya existe le concatena la salida
-				fd = fopen(param,"a");
+      }else if ( cadena[i]== '>' && found == 2){
+        comand = strtok(cadena," ");
+        subcom = strtok(NULL," ");
+        oper = strtok(NULL," ");
+        param = strtok(NULL," ");
+
+        fd = fopen(param,"w");
 				int fw = open(param, O_APPEND|O_WRONLY);
 				dup2(fw,1);
-				execlp(comando, comando, subcom, NULL);
+				execlp(comand, comand, subcom, NULL);
 				close(fw);
 				fclose(fd);
-			}
+      }else if (cadena[i]== '>' && found != 2){
+        comand = strtok(cadena," ");
+  			oper = strtok(NULL," ");
+  			param = strtok(NULL," ");
 
-		}else if(found != 2 && found1 != 2){
-
-			comando = strtok(linea," ");
-			oper = strtok(NULL," ");
-			param = strtok(NULL," ");
-			//si el archivo no existe entonces lo crea y escribe, si ya existe solo sobree escribe en el
-			if( strcmp(oper,">") == 0){
-				fd = fopen(param,"w");
+        fd = fopen(param,"w");
 				int fw = open(param, O_APPEND|O_WRONLY);
 				dup2(fw,1);
-				execlp(comando, comando, NULL);
+				execlp(comand, comand, NULL);
 				close(fw);
 				fclose(fd);
-			}else if (strcmp(oper,">>") == 0){//si el archivo no existe lo crea y escribe, si ya existe le concatena la salida
-				fd = fopen(param,"a");
-				int fw = open(param, O_APPEND|O_WRONLY);
-				dup2(fw,1);
-				execlp(comando, comando, NULL);
-				close(fw);
-				fclose(fd);
-			}
+      }
+    }
+    if(isNotPipe==true){
+      comando(cadena,bg); //enviamos la cadena y el estado del background al procedimiento "comando"
+    }
+  }
+  return(0);
+}
 
-		}else if(found == 2 && found1 == 2){
-			comando = strtok(linea," ");
-			subcom = strtok(NULL," ");
-			oper = strtok(NULL," ");
-			param = strtok(NULL," ");
-			comando1 = strtok(NULL," ");
+void comando(char cadena[n], int bg)
+{
+  int i,j,k;
+  char comando[n][n];
+  char *comando_[n];
+  comando_[0] = NULL;
 
-			//si el archivo no existe entonces lo crea y escribe, si ya existe solo sobree escribe en el
-			if( strcmp(oper,">") == 0 && strcmp(comando1,"2>&1")){
-				fd = fopen(param,"w");
-				int fw = open(param, O_APPEND|O_WRONLY);
-				dup2(fw,2);
-				execlp(comando, comando, subcom, NULL);
-				close(fw);
-				fclose(fd);
-			}else if (strcmp(oper,">>") == 0 && strcmp(comando1,"2>&1")){ //si el archivo no existe lo crea y escribe, si ya existe le concatena la salida
-				fd = fopen(param,"a");
-				int fw = open(param, O_APPEND|O_WRONLY);
-				dup2(fw,2);
-				execlp(comando, comando, subcom, NULL);
-				close(fw);
-				fclose(fd);
-			}
+  k = 0;
+  i = 0;
+  while(cadena[i] != '\0')
+  {
+    for(j=0; cadena[i] != ' ' && cadena[i] != '\0' ;j++)
+    {
+      comando[k][j] = cadena[i];// mientras el caracter sea distinto de espacio y terminacion de cadena (\0) añadir al comando el caracter
+      i++;
+    }
+    if (cadena[i] == ' ') // Si el caracter es un espacio, pasar al siguiente caracter e introducir un fin de caracter a cada comando leido
+    i++;
+    comando[k][j] = '\0';
+    comando_[k] = comando[k];
+    k++;
+  }
+  comando_[k] = NULL;
+  Nuevo_Proceso(comando_,bg);
+}
 
-		}else if(found != 2 && found1 == 2){
+void Nuevo_Proceso(char* comando_[n],int bg)
+{
+  int estado=0;
+  pid_t pid;
+  pid=fork();
+  if (pid<0)
+  printf("ERROR AL CREAR PROCESO");
+  else if (pid==0) {
 
-			comando = strtok(linea," ");
-			oper = strtok(NULL," ");
-			param = strtok(NULL," ");
-			//si el archivo no existe entonces lo crea y escribe, si ya existe solo sobree escribe en el
-			if( strcmp(oper,">") == 0 && strcmp(comando1,"2>&1")){
-				fd = fopen(param,"w");
-				int fw = open(param, O_APPEND|O_WRONLY);
-				dup2(fw,2);
-				execlp(comando, comando, NULL);
-				close(fw);
-				fclose(fd);
-			}else if (strcmp(oper,">>") == 0 && strcmp(comando1,"2>&1")){//si el archivo no existe lo crea y escribe, si ya existe le concatena la salida
-				fd = fopen(param,"a");
-				int fw = open(param, O_APPEND|O_WRONLY);
-				dup2(fw,2);
-				execlp(comando, comando, NULL);
-				close(fw);
-				fclose(fd);
-			}
+    execvp(comando_[0],comando_);
+    perror("ERROR:");
+    exit(estado);
+  }else{
+    if (bg == 0)
+    pid=wait(&estado);
+  }
+}
 
-		}
+void executeCommand(char command[]) {
+  int index = 1;
+  char *args[30];
+  char *token = strtok(command, " ");
+  args[0] = strdup(token);
 
-		if ((pid = fork()) == 0) {
-			valor = execlp(comando, comando, param, NULL);
-		}else if (valor == -1){
-			cout << "comando no existe" << endl;
-		}
-	}
-	cout << "Esperando ..." << endl;
-	waitpid(pid, &status,0);
-	cout << "estado: " << status << endl;
-	return 0;
+  while ((token = strtok(NULL, " ")) != NULL) {
+    args[index] = strdup(token);
+    ++index;
+  }
+  args[index] = NULL;
+  execvp(args[0], args);
 }
