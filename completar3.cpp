@@ -78,8 +78,6 @@ int main()
 					command1 = strtok(cadena, "|");
 					command2 = strtok(NULL, "|");
 
-					cout<<"COMANDO UNO "<<command1<<endl;
-					cout<<"COMANDO DOS"<<command2<<endl;
 					pipe(pipefds);
 					if ((pid = fork()) < 0) {
 						cerr << "Fork error al ejecutar el comando pipe" << endl;
@@ -98,7 +96,7 @@ int main()
 
 					else { //preceso padre
 						close(0);			//cierra la lectura
-						dup(pipefds[0]);	//replace with read side of pipe
+						dup(pipefds[0]);	
 
 						close(pipefds[0]);	
 						close(pipefds[1]);
